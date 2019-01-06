@@ -9,6 +9,8 @@
 + pandas
 + beautifulsoup4
 + progressbar
++ xlrd
++ lxml
 
 ## 스크립트 설명
 

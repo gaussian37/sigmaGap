@@ -3,3 +3,5 @@ matplotlib
 pandas
 beautifulsoup4
 progressbar
+xlrd
+lxml
