@@ -1,0 +1,147 @@
+import numpy as np
+import pandas as pd
+import time
+import datetime
+import warnings
+import argparse
+import matplotlib.pyplot as plt
+import sys
+import os
+import progressbar
+
+warnings.filterwarnings("ignore")
+
+# argument parser를 구성해 주고 입력 받은 argument는 parse 합니다.
+ap = argparse.ArgumentParser()
+# -nb, --nbuy : 살 주식의 총 갯수
+ap.add_argument("-nb", "--nbuy", default=0, help="the number of buy")
+# -m, --money : 살 주식의 총 금액
+ap.add_argument("-m", "--money", default=0, help="total money")
+# -d, --divide : 분할 투자 갯수
+ap.add_argument("-d", "--divide", required=True, help="the number of divide")
+# -t, --txt : 출력할 text 이름을 받습니다. 기본값은 result
+ap.add_argument("-t", "--txt", default="result", help="Path of result text")
+# -r, --rank : 상위 몇 rank 까지 조회할 지를 받습니다. 기본값은 30
+ap.add_argument("-r", "--rank", default=30, help="how many company do you want?")
+args = vars(ap.parse_args())
+
+# 살 주식의 숫자
+nbuy = int(args["nbuy"])
+# 살 주식의 총 금액
+totalMoney = int(args["money"])
+# 분할 투자 갯수
+divide = int(args["divide"])
+# 상위 몇 rank 까지 조회할 것인가
+ranks = int(args["rank"])
+# 출력할 text 이름
+fname = args["txt"]
+# 분할 투자 시 한 기관에 투자할 금액
+money = totalMoney // divide
+
+# 텍스트로 출력하도록 stdout 변경
+sys.stdout = open(fname + '.txt', 'w')
+
+# kospi 상위 100개의 리스트를 가져 옵니다.
+top100 = pd.read_excel("kospitop100.xlsx")
+# 각 기관의 코드 번호를 문자열로 바꾸고 0으로 채워서 6자리로 만듭니다.
+top100["code"] = top100["code"].astype(str)
+for i in range(100):
+    top100["code"][i] = top100["code"][i].zfill(6)
+
+# 그래프를 저장할 디렉토리 생성합니다.
+if os.path.exists("graph") == False:
+    os.mkdir('graph')
+# 선정된 기관의 담을 리스트
+incentiveList = []
+
+progress = progressbar.ProgressBar()
+# 상위 기관부터 차례대로 접근 합니다.
+for rank in progress(range(ranks)):
+    # code를 입력 받습니다.
+    code = top100["code"][rank]
+    # 데이터를 담을 DataFrame을 생성합니다.
+    df = pd.DataFrame()
+    # 네이버 주식의 url에 입력받은 code를 대입합니다.
+    url = 'http://finance.naver.com/item/sise_day.nhn?code={code}'.format(code=code)
+    # 최근 2달 간의 주식 정보를 받아 옵니다.
+    for i in range(1, 4):
+        pg_url = '{url}&page={page}'.format(url=url, page=i)
+        df = df.append(pd.read_html(pg_url, header=0)[0], ignore_index=True)
+        df = df.dropna()
+    # 일 별 최고가 리스트를 받아옵니다.
+    highPrice = df["고가"]
+    # 일 별 종가 리스트를 받아옵니다.
+    closingPrice = df["종가"]
+    # n일의 최고가 - (n-1)일의 종가 차이를 구합니다.
+    # (n-1)일에서 종가 가격으로 구하고 n일에는 (종가 - 그 다음날 최고가)의 평균으로 팔 예정입니다.
+    gap = np.array(highPrice[:-1]) - np.array(closingPrice[1:])
+
+    f, (ax1, ax2) = plt.subplots(1, 2, sharex=False, sharey=False, figsize=(8, 5))
+    # 최근 2달간의 데이터로 히스토그램을 그립니다.
+    freq = ax1.hist(gap, rwidth=0.9)
+    # 현재 가격을 받습니다.
+    price = int(closingPrice[0])
+    # gap의 평균을 구합니다.
+    mean = int(gap.mean())
+    # gap의 표준편차를 구합니다.
+    std = int(gap.std())
+
+    # 안정적인 투자를 위하여 mean - std가 음수 이면 투자하지 않습니다.
+    if mean - std < 0:
+        f.clf()
+        continue
+        # nbuy가 입력 된 경우에 출력합니다. (기관 / 구매수 / 구매액 / 예상 이윤)
+    if nbuy > 0:
+        print("- " + top100["eng_company"][rank])
+        print("the number of buying : ", nbuy)
+        print("money : ", format(int(price * nbuy), ","))
+        incentive = int(mean * nbuy - (price + mean) * nbuy * 0.0031)
+        print("incentive : ", format(incentive, ","))
+        incentiveList.append([incentive, top100["eng_company"][rank]])
+        print()
+    # money가 입력된 경우에 출력합니다. (기관 / 구매수 / 구매액 / 예상 이윤)
+    elif money > 0:
+        numBuy = money // price
+        print("- " + top100["eng_company"][rank])
+        print("the number of buying : ", numBuy)
+        print("money : ", format(numBuy * price, ","))
+        incentive = int(mean * numBuy - (price + mean) * numBuy * 0.0031)
+        print("incentive : ", format(incentive, ","))
+        incentiveList.append([incentive, top100["eng_company"][rank]])
+        print()
+
+    # ax1 그래프를 그립니다.
+    # 투자 대상 기관의 현황을 그래프로 출력합니다.
+    ax1.set_title(top100["eng_company"][rank], fontSize=15)
+    ax1.set_ylabel('frequency')
+    ax1.set_xlabel("price gap")
+    ax1.axvspan(mean - std, mean + std, facecolor='gray', alpha=0.2)
+
+    ax1.text(mean - std, 1,
+             "-σ : {:,}".format(mean - std), color='red', fontSize=12,
+             bbox=dict(facecolor='y', edgecolor='red'))
+    ax1.text(mean + std, 1,
+             "σ : {:,}".format(mean + std), color='red', fontSize=12,
+             bbox=dict(facecolor='y', edgecolor='red'))
+    ax1.text(gap.min(), freq[0].max() - 2,
+             "price : {:,}\nmean : {:,}\nstd : {:,}\nsell : {:,}".format(price, mean, std, price + mean, ","), color='red', fontSize=12)
+
+    # ax2 그래프를 그립니다.
+    ax2.set_title("gap state", fontSize=15)
+    ax2.set_ylabel('price')
+    ax2.set_xlabel('past → present')
+    reversedGap = np.flip(gap, axis = 0)
+    ax2.bar(np.arange(len(gap)), gap, align='center',  alpha=0.5)
+
+    f.savefig("graph/" + top100["eng_company"][rank])
+    f.clf()
+
+# 대상 기관들을 예상 이윤 순으로 내림차순 정렬합니다.
+incentiveList.sort(reverse=True)
+# 분할 투자한 갯수만큼 상위 이윤 기관의 예상 이윤 총합을 구합니다.
+totalMaxIncentive = sum([incentive[0] for incentive in incentiveList][:divide])
+print("Total Maximum Incentive : ", format(totalMaxIncentive, ","))
+# 분할 투자할 기관의 리스트를 최종 출력합니다.
+print("Maximum Incentive List : ")
+for incentive in incentiveList[:divide]:
+    print("Company : {}, Incentive : {:,}".format(incentive[1], incentive[0]))    
