@@ -36,24 +36,22 @@ python sigmaGap.py -m=10000000 -d=4
 ## 결과 리포트 예
 
 ```
-- Celltrion <br>
-the number of buying :  2 <br>
-cost :  433,000 <br>
-prediction by movingAverage :  11,665 <br>
-incentive :  23,257 <br>
+- Celltrion 
+the number of buying :  2
+cost :  433,000
+prediction by movingAverage :  11,665
+incentive :  23,257
 
-<br>
 ...
-<br>
 
-- AMOREPACIFIC <br>
-the number of buying :  3 <br>
-cost :  553,500 <br>
-prediction by movingAverage :  5,365 <br>
-incentive :  16,045 <br>
+- AMOREPACIFIC
+the number of buying :  3
+cost :  553,500
+prediction by movingAverage :  5,365
+incentive :  16,045
 
-Total Maximum Incentive :  39,302 <br>
-Maximum Incentive List : <br>
-Company : Celltrion, Incentive : 23,257 <br>
-Company : AMOREPACIFIC, Incentive : 16,045 <br>
+Total Maximum Incentive :  39,302
+Maximum Incentive List :
+Company : Celltrion, Incentive : 23,257
+Company : AMOREPACIFIC, Incentive : 16,045
 ```
