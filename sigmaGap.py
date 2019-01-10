@@ -12,8 +12,6 @@ warnings.filterwarnings("ignore")
 
 # argument parser를 구성해 주고 입력 받은 argument는 parse 합니다.
 ap = argparse.ArgumentParser()
-# -nb, --nbuy : 살 주식의 총 갯수
-ap.add_argument("-nb", "--nbuy", default=0, help="the number of buy")
 # -m, --money : 살 주식의 총 금액
 ap.add_argument("-m", "--money", default=0, help="total money")
 # -d, --divide : 분할 투자 갯수
@@ -24,8 +22,6 @@ ap.add_argument("-t", "--txt", default="result.txt", help="Path of result text")
 ap.add_argument("-r", "--rank", default=30, help="how many company do you want?")
 args = vars(ap.parse_args())
 
-# 살 주식의 숫자
-nbuy = int(args["nbuy"])
 # 살 주식의 총 금액
 totalMoney = int(args["money"])
 # 분할 투자 갯수
@@ -100,36 +96,27 @@ for rank in progress(range(ranks)):
     # moveingAverage들의 전체 평균을 구합니다.
     meanMovingAverage = int(np.mean(movingAverage))
     predictionByMovingAverage = int(movingSize*meanMovingAverage - np.sum(movingAverage[-movingSize+1:]))
+    sellingPrice = int(closingPrice[-1] + predictionByMovingAverage)
 
     # 안정적인 투자를 위하여 mean - std가 음수 이면 투자하지 않습니다.
     # movingAverage를 계산해서 movingAverage를 이용한 내일 예상 차익값 0 이하이면 투자하지 않습니다.
     if (mean - std < 0) or (predictionByMovingAverage < 0):
         f.clf()
         continue
-        # nbuy가 입력 된 경우에 출력합니다. (기관 / 구매수 / 구매액 / 예상 이윤)
-    if nbuy > 0:
-        print("- " + top100["eng_company"][rank])
-        print("the number of buying : ", nbuy)
-        print("money : ", format(int(price * nbuy), ","))
-        incentive = int(mean * nbuy - (price + mean) * nbuy * 0.0031)
-        print("incentive : ", format(incentive, ","))
-        incentiveList.append([incentive, top100["eng_company"][rank]])
-        print()
-    # money가 입력된 경우에 출력합니다. (기관 / 구매수 / 구매액 / 예상 이윤)
-    elif money > 0:
-        numBuy = money // price        
-        print("- " + top100["eng_company"][rank])        
-        print("the number of buying : ", numBuy)        
-        print("cost : ", format(numBuy * price, ","))
-        print("prediction by movingAverage : ", format(predictionByMovingAverage, ","))
-        incentive = int(predictionByMovingAverage * numBuy - predictionByMovingAverage * numBuy * 0.0031)
-        print("incentive : ", format(incentive, ","))        
-        incentiveList.append([incentive, top100["eng_company"][rank]])
-        predictionByMovingAverageList[top100["eng_company"][rank]] = predictionByMovingAverage
-        print()
-
-    # ax1 그래프를 그립니다.
-    # 투자 대상 기관의 현황을 그래프로 출력합니다.
+      
+    
+    numBuy = money // price        
+    print("- " + top100["eng_company"][rank])        
+    print("the number of buying : ", numBuy)        
+    print("cost : ", format(numBuy * price, ","))
+    print("prediction by movingAverage : ", format(predictionByMovingAverage, ","))
+    incentive = int(predictionByMovingAverage * numBuy - predictionByMovingAverage * numBuy * 0.0031)
+    print("incentive : ", format(incentive, ","))        
+    incentiveList.append([incentive, top100["eng_company"][rank]])
+    predictionByMovingAverageList[top100["eng_company"][rank]] = predictionByMovingAverage
+    print()
+    
+    # 투자 대상 기관의 종가 대비 최고가 현황을 그래프로 출력합니다.
     ax1.set_title("Price Gap Histogram", fontSize=15)
     ax1.set_ylabel('frequency')
     ax1.set_xlabel("price gap")
@@ -141,22 +128,25 @@ for rank in progress(range(ranks)):
     ax1.text(mean + std, 1,
              "σ : {:,}".format(mean + std), color='red', fontSize=12,
              bbox=dict(facecolor='y', edgecolor='red'))
-    ax1.text(gap.min(), freq[0].max() - 2,
+    ax1.text(gap.min(), freq[0].max() * 0.8,
              "price : {:,}\nmean : {:,}\nstd : {:,}\n".format(price, mean, std, ","), color='red', fontSize=12)
 
-    # ax2 그래프를 그립니다.
-    ax2.set_title("Gap State", fontSize=15)
+    # Gap의 상태를 과거 부터 오늘 까지 현황을 표시합니다.
+    # 회사 이름을 한 가운데 표시해 줍니다.
+    ax2.set_title(top100["eng_company"][rank] + "\nGap State", fontSize=15)
     ax2.set_ylabel('price')
     ax2.set_xlabel('past → present')    
     ax2.bar(np.arange(len(gap)), gap, align='center',  alpha=0.5)
 
-    # ax3 그래프를 그립니다.
+    # MovingAverage를 표시합니다.
     ax3.set_title("Moving Average state", fontSize=15)
     ax3.set_ylabel('price')
     ax3.set_xlabel('past → present')    
     ax3.bar(np.arange(len(movingAverage)), movingAverage, align='center',  alpha=0.5)
-    ax3.text(0, np.max(movingAverage),
-            "mean of Moving Average : {:,}".format(meanMovingAverage, ","), fontSize=12, color='red')
+    ax3.text(0, np.max(movingAverage)*0.9,
+            "mean of Moving Average : {:,}\nSelling Price : {:,}".format(
+                meanMovingAverage, sellingPrice),
+                fontSize=12, color='red')
 
     f.savefig("graph/" + top100["eng_company"][rank])
     f.clf()
