@@ -144,8 +144,8 @@ for rank in progress(range(ranks)):
     ax3.set_xlabel('past → present')    
     ax3.bar(np.arange(len(movingAverage)), movingAverage, align='center',  alpha=0.5)
     ax3.text(0, np.max(movingAverage)*0.9,
-            "mean of Moving Average : {:,}\nSelling Price : {:,}".format(
-                meanMovingAverage, sellingPrice),
+            "mean of Moving Average : {:,}\nExpected Profit : {:,}\nSelling Price : {:,}".format(
+                meanMovingAverage, predictionByMovingAverage, sellingPrice),
                 fontSize=12, color='red')
 
     f.savefig("graph/" + top100["eng_company"][rank])
