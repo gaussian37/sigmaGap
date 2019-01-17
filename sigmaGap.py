@@ -64,7 +64,7 @@ for rank in progress(range(ranks)):
     # 네이버 주식의 url에 입력받은 code를 대입합니다.
     url = 'http://finance.naver.com/item/sise_day.nhn?code={code}'.format(code=code)
     # 최근 1달 간의 주식 정보를 받아 옵니다.
-    for i in range(1, 3):
+    for i in range(1, 5):
         pg_url = '{url}&page={page}'.format(url=url, page=i)
         df = df.append(pd.read_html(pg_url, header=0)[0], ignore_index=True)
         df = df.dropna()
