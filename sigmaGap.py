@@ -1,13 +1,64 @@
-import numpy as np
-import pandas as pd 
 import time
 import datetime
 import warnings
-import argparse
-import matplotlib.pyplot as plt
-import sys
-import progressbar
 import os
+import sys
+
+# pip가 없으면 pip를 설치한다.
+try:
+    import pip
+except ImportError:
+    print("Install pip for python3")
+    subprocess.call(['sudo', 'apt-get', 'install', 'python3-pip'])
+
+try:
+    import numpy
+except ModuleNotFoundError:
+    print("Install numpy")
+    subprocess.call([sys.executable, "-m", "pip", "install", 'numpy'])
+finally:
+    import numpy as np
+
+try:
+    import numpy as np
+except ModuleNotFoundError:
+    print("Install numpy")
+    subprocess.call([sys.executable, "-m", "pip", "install", 'numpy'])
+finally:
+    import numpy as np
+    
+try:
+    import pandas as pd
+except ModuleNotFoundError:
+    print("Install pandas")
+    subprocess.call([sys.executable, "-m", "pip", "install", 'pandas'])
+finally:
+    import pandas as pd
+
+try:
+    import argparse
+except ModuleNotFoundError:
+    print("Install argparse")
+    subprocess.call([sys.executable, "-m", "pip", "install", 'argparse'])
+finally:
+    import argparse
+
+try:
+    import matplotlib.pyplot as plt
+except ModuleNotFoundError:
+    print("Install matplotlib")
+    subprocess.call([sys.executable, "-m", "pip", "install", 'matplotlib'])
+finally:
+    import matplotlib.pyplot as plt
+
+try:
+    import progressbar
+except ModuleNotFoundError:
+    print("Install progressbar")
+    subprocess.call([sys.executable, "-m", "pip", "install", 'progressbar'])
+finally:
+    import progressbar
+
 warnings.filterwarnings("ignore")
 
 # argument parser를 구성해 주고 입력 받은 argument는 parse 합니다.
