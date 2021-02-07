@@ -27,6 +27,14 @@ except ModuleNotFoundError:
     subprocess.call([sys.executable, "-m", "pip", "install", 'pandas'])
 finally:
     import pandas as pd
+    
+try:
+    import xlrd
+except ModuleNotFoundError:
+    print("Install xlrd")
+    subprocess.call([sys.executable, "-m", "pip", "install", 'xlrd'])
+finally:
+    import xlrd
 
 try:
     import argparse
