@@ -3,6 +3,7 @@ import datetime
 import warnings
 import os
 import sys
+import subprocess
 
 # pip가 없으면 pip를 설치한다.
 try:
@@ -13,14 +14,6 @@ except ImportError:
 
 try:
     import numpy
-except ModuleNotFoundError:
-    print("Install numpy")
-    subprocess.call([sys.executable, "-m", "pip", "install", 'numpy'])
-finally:
-    import numpy as np
-
-try:
-    import numpy as np
 except ModuleNotFoundError:
     print("Install numpy")
     subprocess.call([sys.executable, "-m", "pip", "install", 'numpy'])
